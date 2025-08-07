@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Team Generator</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+        
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(45deg, #2c3e50, #3498db);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+        
+        .section {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .section:last-child {
+            border-bottom: none;
+        }
+        
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+        }
+        
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: #3498db;
+            margin-right: 10px;
+            border-radius: 2px;
+        }
+        
+        .grade-inputs {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .grade-group {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .grade-group.grade-a { border-left-color: #27ae60; background: #e8f5e8; }
+        .grade-group.grade-b { border-left-color: #3498db; background: #e8f0ff; }
+        .grade-group.grade-c { border-left-color: #f39c12; background: #fff0e8; }
+        
+        .grade-group h3 {
+            font-size: 1rem;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        
+        .grade-group textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            resize: vertical;
+        }
+        
+        .grade-group small {
+            color: #666;
+            font-size: 0.8rem;
+            margin-top: 5px;
+            display: block;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            flex: 1;
+            min-width: 120px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            touch-action: manipulation;
+        }
+        
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2980b9;
+            transform: translateY(-1px);
+        }
+        
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #229954;
+            transform: translateY(-1px);
+        }
+        
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+        
+        .teams-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .team-card {
+            background: white;
+            border: 2px solid #3498db;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .team-header {
+            background: #3498db;
+            color: white;
+            padding: 12px;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .team-body {
+            padding: 15px;
+        }
+        
+        .player {
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        
+        .player.grade-a { background: #e8f5e8; border-left: 3px solid #27ae60; }
+        .player.grade-b { background: #e8f0ff; border-left: 3px solid #3498db; }
+        .player.grade-c { background: #fff0e8; border-left: 3px solid #f39c12; }
+        
+        .team-stats {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+            font-size: 0.8rem;
+            color: #666;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .draw-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 0.85rem;
+        }
+        
+        .draw-table th,
+        .draw-table td {
+            padding: 10px 8px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+        
+        .draw-table th {
+            background: #2c3e50;
+            color: white;
+            font-weight: 600;
+            font-size: 0.75rem;
+        }
+        
+        .shallow { background: #e3f2fd; }
+        .deep { background: #f3e5f5; }
+        
+        .alert {
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-size: 0.9rem;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        
+        .alert-danger {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .stat-card {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 3px solid #3498db;
+        }
+        
+        .stat-card h4 {
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-size: 0.9rem;
+        }
+        
+        .stat-value {
+            font-size: 0.8rem;
+            color: #666;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .teams-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+            }
+            
+            .btn {
+                min-width: 100%;
+            }
+            
+            .draw-table {
+                font-size: 0.75rem;
+            }
+            
+            .draw-table th,
+            .draw-table td {
+                padding: 8px 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏆 Team Generator</h1>
+            <p>Create balanced teams and game draws</p>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">👥 Player Input</div>
+            <div class="grade-inputs">
+                <div class="grade-group grade-a">
+                    <h3>🥇 A-Grade Players</h3>
+                    <textarea id="aPlayers" placeholder="Enter A-grade player names (one per line)"></textarea>
+                    <small>High-skilled players (max 2 per team)</small>
+                </div>
+                
+                <div class="grade-group grade-b">
+                    <h3>🥈 B-Grade Players</h3>
+                    <textarea id="bPlayers" placeholder="Enter B-grade player names (one per line)"></textarea>
+                    <small>Medium-skilled players (fills remaining spots)</small>
+                </div>
+                
+                <div class="grade-group grade-c">
+                    <h3>🥉 C-Grade Players</h3>
+                    <textarea id="cPlayers" placeholder="Enter C-grade player names (one per line)"></textarea>
+                    <small>Lower-skilled players (max 2 per team)</small>
+                </div>
+            </div>
+            
+            <div class="btn-group">
+                <button class="btn btn-success" onclick="generateTeams()">
+                    ⚡ Generate Teams
+                </button>
+                <button class="btn btn-secondary" onclick="clearAll()">
+                    🗑️ Clear All
+                </button>
+            </div>
+        </div>
+        
+        <div class="section" id="teamsSection">
+            <div class="section-title">🏅 Generated Teams</div>
+            <div id="teamMessage"></div>
+            <div id="teamStats" class="stats-grid hidden"></div>
+            <div id="teamsContainer" class="teams-grid"></div>
+            
+            <div class="btn-group" id="drawButtons" style="display: none;">
+                <button class="btn btn-primary" onclick="generateDraw()">
+                    📋 Generate Draw
+                </button>
+                <button class="btn btn-secondary" onclick="clearDraw()">
+                    Clear Draw
+                </button>
+            </div>
+        </div>
+        
+        <div class="section" id="drawSection">
+            <div class="section-title">🎮 Game Draw</div>
+            <div id="drawMessage"></div>
+            <div id="drawStats" class="stats-grid hidden"></div>
+            <div id="drawContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        let teams = [];
+        
+        function collectPlayers() {
+            const aText = document.getElementById('aPlayers').value.trim();
+            const bText = document.getElementById('bPlayers').value.trim();
+            const cText = document.getElementById('cPlayers').value.trim();
+            
+            return {
+                A: aText ? aText.split('\n').filter(name => name.trim()).map(name => name.trim()) : [],
+                B: bText ? bText.split('\n').filter(name => name.trim()).map(name => name.trim()) : [],
+                C: cText ? cText.split('\n').filter(name => name.trim()).map(name => name.trim()) : []
+            };
+        }
+        
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+        
+        function generateTeams() {
+            clearMessages();
+            const players = collectPlayers();
+            
+            const totalPlayers = players.A.length + players.B.length + players.C.length;
+            if (totalPlayers < 4) {
+                showMessage('teamMessage', 'Need at least 4 players to form teams!', 'error');
+                return;
+            }
+            
+            // Shuffle players
+            const shuffledA = shuffleArray(players.A);
+            const shuffledB = shuffleArray(players.B);
+            const shuffledC = shuffleArray(players.C);
+            
+            // Initialize teams
+            teams = [
+                { name: 'Team 1', players: [], A: 0, B: 0, C: 0 },
+                { name: 'Team 2', players: [], A: 0, B: 0, C: 0 },
+                { name: 'Team 3', players: [], A: 0, B: 0, C: 0 },
+                { name: 'Team 4', players: [], A: 0, B: 0, C: 0 }
+            ];
+            
+            // Distribute A players (max 2 per team)
+            let aIndex = 0;
+            for (let round = 0; round < 2 && aIndex < shuffledA.length; round++) {
+                for (let team = 0; team < 4 && aIndex < shuffledA.length; team++) {
+                    if (teams[team].A < 2) {
+                        teams[team].players.push({ name: shuffledA[aIndex], grade: 'A' });
+                        teams[team].A++;
+                        aIndex++;
+                    }
+                }
+            }
+            
+            // Distribute C players (max 2 per team)
+            let cIndex = 0;
+            for (let round = 0; round < 2 && cIndex < shuffledC.length; round++) {
+                for (let team = 0; team < 4 && cIndex < shuffledC.length; team++) {
+                    if (teams[team].C < 2) {
+                        teams[team].players.push({ name: shuffledC[cIndex], grade: 'C' });
+                        teams[team].C++;
+                        cIndex++;
+                    }
+                }
+            }
+            
+            // Create remaining players array
+            const remainingPlayers = [
+                ...shuffledB.map(name => ({ name, grade: 'B' })),
+                ...shuffledA.slice(aIndex).map(name => ({ name, grade: 'A' })),
+                ...shuffledC.slice(cIndex).map(name => ({ name, grade: 'C' }))
+            ];
+            
+            // Balanced distribution
+            const targetTeamSize = Math.floor(totalPlayers / 4);
+            const teamsNeedingExtra = totalPlayers % 4;
+            
+            // Shuffle remaining players
+            const shuffledRemaining = shuffleArray(remainingPlayers);
+            
+            // Distribute to achieve balanced teams
+            let playerIndex = 0;
+            
+            // First phase: fill to target size
+            for (let team = 0; team < 4; team++) {
+                while (teams[team].players.length < targetTeamSize && playerIndex < shuffledRemaining.length) {
+                    const player = shuffledRemaining[playerIndex];
+                    teams[team].players.push(player);
+                    teams[team][player.grade]++;
+                    playerIndex++;
+                }
+            }
+            
+            // Second phase: distribute remaining players
+            let teamIndex = 0;
+            while (playerIndex < shuffledRemaining.length) {
+                if (teamIndex < teamsNeedingExtra || teamsNeedingExtra === 0) {
+                    const player = shuffledRemaining[playerIndex];
+                    teams[teamIndex].players.push(player);
+                    teams[teamIndex][player.grade]++;
+                    playerIndex++;
+                }
+                teamIndex = (teamIndex + 1) % 4;
+            }
+            
+            displayTeams();
+            document.getElementById('drawButtons').style.display = 'flex';
+            showMessage('teamMessage', 'Teams generated successfully! ✅', 'success');
+        }
+        
+        function displayTeams() {
+            const container = document.getElementById('teamsContainer');
+            container.innerHTML = '';
+            
+            teams.forEach((team, index) => {
+                const teamDiv = document.createElement('div');
+                teamDiv.className = 'team-card';
+                
+                let playersHtml = '';
+                team.players.forEach(player => {
+                    playersHtml += `<div class="player grade-${player.grade.toLowerCase()}">${player.name} (${player.grade})</div>`;
+                });
+                
+                teamDiv.innerHTML = `
+                    <div class="team-header">${team.name}</div>
+                    <div class="team-body">
+                        ${playersHtml}
+                        <div class="team-stats">
+                            <span>Total: ${team.players.length}</span>
+                            <span>A:${team.A} B:${team.B} C:${team.C}</span>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(teamDiv);
+            });
+            
+            updateTeamStats();
+        }
+        
+        function updateTeamStats() {
+            const statsContainer = document.getElementById('teamStats');
+            const teamSizes = teams.map(team => team.players.length);
+            const minSize = Math.min(...teamSizes);
+            const maxSize = Math.max(...teamSizes);
+            const isBalanced = maxSize - minSize <= 1;
+            
+            statsContainer.innerHTML = `
+                <div class="stat-card">
+                    <h4>Team Balance</h4>
+                    <div class="stat-value">
+                        Min: ${minSize}, Max: ${maxSize}<br>
+                        ${isBalanced ? '✅ Balanced' : '⚠️ Unbalanced'}
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <h4>Player Distribution</h4>
+                    <div class="stat-value">
+                        A: ${teams.reduce((sum, team) => sum + team.A, 0)}<br>
+                        B: ${teams.reduce((sum, team) => sum + team.B, 0)}<br>
+                        C: ${teams.reduce((sum, team) => sum + team.C, 0)}
+                    </div>
+                </div>
+            `;
+            
+            statsContainer.classList.remove('hidden');
+        }
+        
+        function generateDraw() {
+            if (teams.length !== 4) {
+                showMessage('drawMessage', 'Please generate teams first!', 'error');
+                return;
+            }
+            
+            const games = [];
+            const locationCount = {
+                0: { Shallow: 0, Deep: 0 },
+                1: { Shallow: 0, Deep: 0 },
+                2: { Shallow: 0, Deep: 0 },
+                3: { Shallow: 0, Deep: 0 }
+            };
+            
+            // Generate 3 games with all teams playing
+            for (let gameNum = 1; gameNum <= 3; gameNum++) {
+                // Shuffle team order for this game
+                const teamOrder = shuffleArray([0, 1, 2, 3]);
+                
+                // Assign teams to locations with constraints
+                const shallowTeams = [];
+                const deepTeams = [];
+                const assigned = [false, false, false, false];
+                
+                // First assign constrained teams
+                for (let i = 0; i < 4; i++) {
+                    const teamIndex = teamOrder[i];
+                    if (locationCount[teamIndex].Shallow >= 2 && !assigned[i]) {
+                        deepTeams.push(teamIndex);
+                        assigned[i] = true;
+                    } else if (locationCount[teamIndex].Deep >= 2 && !assigned[i]) {
+                        shallowTeams.push(teamIndex);
+                        assigned[i] = true;
+                    }
+                }
+                
+                // Then assign remaining teams
+                for (let i = 0; i < 4; i++) {
+                    if (!assigned[i]) {
+                        const teamIndex = teamOrder[i];
+                        if (shallowTeams.length < 2 && (deepTeams.length >= 2 || Math.random() < 0.5)) {
+                            shallowTeams.push(teamIndex);
+                        } else {
+                            deepTeams.push(teamIndex);
+                        }
+                        assigned[i] = true;
+                    }
+                }
+                
+                // Randomly assign Black/White within locations
+                const shallowBlack = Math.random() < 0.5 ? shallowTeams[0] : shallowTeams[1];
+                const shallowWhite = shallowBlack === shallowTeams[0] ? shallowTeams[1] : shallowTeams[0];
+                const deepBlack = Math.random() < 0.5 ? deepTeams[0] : deepTeams[1];
+                const deepWhite = deepBlack === deepTeams[0] ? deepTeams[1] : deepTeams[0];
+                
+                games.push({
+                    game: gameNum,
+                    shallowBlack: teams[shallowBlack].name,
+                    shallowWhite: teams[shallowWhite].name,
+                    deepBlack: teams[deepBlack].name,
+                    deepWhite: teams[deepWhite].name
+                });
+                
+                // Update location counts
+                locationCount[shallowBlack].Shallow++;
+                locationCount[shallowWhite].Shallow++;
+                locationCount[deepBlack].Deep++;
+                locationCount[deepWhite].Deep++;
+            }
+            
+            displayDraw(games, locationCount);
+            showMessage('drawMessage', 'Draw generated successfully! 🎯', 'success');
+        }
+        
+        function displayDraw(games, locationCount) {
+            const container = document.getElementById('drawContainer');
+            
+            let tableHtml = `
+                <table class="draw-table">
+                    <thead>
+                        <tr>
+                            <th>Game</th>
+                            <th>Shallow Black</th>
+                            <th>Shallow White</th>
+                            <th>Deep Black</th>
+                            <th>Deep White</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            games.forEach(game => {
+                tableHtml += `
+                    <tr>
+                        <td>${game.game}</td>
+                        <td class="shallow">${game.shallowBlack}</td>
+                        <td class="shallow">${game.shallowWhite}</td>
+                        <td class="deep">${game.deepBlack}</td>
+                        <td class="deep">${game.deepWhite}</td>
+                    </tr>
+                `;
+            });
+            
+            tableHtml += '</tbody></table>';
+            container.innerHTML = tableHtml;
+            
+            // Update location stats
+            updateLocationStats(locationCount);
+        }
+        
+        function updateLocationStats(locationCount) {
+            const statsContainer = document.getElementById('drawStats');
+            let statsHtml = '';
+            
+            Object.keys(locationCount).forEach(teamIndex => {
+                const shallow = locationCount[teamIndex].Shallow;
+                const deep = locationCount[teamIndex].Deep;
+                const balanced = shallow <= 2 && deep <= 2;
+                
+                statsHtml += `
+                    <div class="stat-card">
+                        <h4>${teams[teamIndex].name}</h4>
+                        <div class="stat-value">
+                            Shallow: ${shallow}, Deep: ${deep}
+                            ${balanced ? ' ✅' : ' ❌'}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            statsContainer.innerHTML = statsHtml;
+            statsContainer.classList.remove('hidden');
+        }
+        
+        function clearAll() {
+            teams = [];
+            document.getElementById('aPlayers').value = '';
+            document.getElementById('bPlayers').value = '';
+            document.getElementById('cPlayers').value = '';
+            document.getElementById('teamsContainer').innerHTML = '';
+            document.getElementById('drawContainer').innerHTML = '';
+            document.getElementById('teamStats').classList.add('hidden');
+            document.getElementById('drawStats').classList.add('hidden');
+            document.getElementById('drawButtons').style.display = 'none';
+            clearMessages();
+        }
+        
+        function clearDraw() {
+            document.getElementById('drawContainer').innerHTML = '';
+            document.getElementById('drawStats').classList.add('hidden');
+            clearDrawMessages();
+        }
+        
+        function clearMessages() {
+            document.getElementById('teamMessage').innerHTML = '';
+            document.getElementById('drawMessage').innerHTML = '';
+        }
+        
+        function clearDrawMessages() {
+            document.getElementById('drawMessage').innerHTML = '';
+        }
+        
+        function showMessage(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="alert alert-${type === 'error' ? 'danger' : 'success'}">${message}</div>`;
+        }
+    </script>
+</body>
+</html>
