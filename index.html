@@ -79,6 +79,57 @@
             border-radius: 2px;
         }
         
+        .team-count-selector {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .team-count-selector h3 {
+            font-size: 1rem;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        
+        .radio-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 10px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            transition: all 0.2s;
+            background: white;
+            min-width: 150px;
+        }
+        
+        .radio-option:hover {
+            border-color: #3498db;
+        }
+        
+        .radio-option.selected {
+            border-color: #3498db;
+            background: #e8f0ff;
+        }
+        
+        .radio-option input[type="radio"] {
+            margin: 0;
+        }
+        
+        .radio-option label {
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
         .grade-inputs {
             display: grid;
             gap: 15px;
@@ -363,6 +414,10 @@
             .stats-grid {
                 grid-template-columns: 1fr;
             }
+            
+            .radio-group {
+                flex-direction: column;
+            }
         }
         
         .table-container {
@@ -379,12 +434,29 @@
         </div>
         
         <div class="section">
+            <div class="section-title">⚙️ Configuration</div>
+            <div class="team-count-selector">
+                <h3>Number of Teams</h3>
+                <div class="radio-group">
+                    <div class="radio-option selected" id="option-2">
+                        <input type="radio" id="teams2" name="teamCount" value="2" checked>
+                        <label for="teams2">2 Teams (No Draw)</label>
+                    </div>
+                    <div class="radio-option" id="option-4">
+                        <input type="radio" id="teams4" name="teamCount" value="4">
+                        <label for="teams4">4 Teams (With Draw)</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
             <div class="section-title">👥 Player Input</div>
             <div class="grade-inputs">
                 <div class="grade-group grade-a">
-                    <h3>⚡ 4 Best Forwards</h3>
-                    <textarea id="aPlayers" placeholder="Enter your 4 best forward players (one per line)&#10;Example:&#10;Sarah&#10;Mike&#10;Alex&#10;Jordan"></textarea>
-                    <small>Top 4 forwards (exactly 1 per team)</small>
+                    <h3 id="forwardsTitle">⚡ 2 Best Forwards</h3>
+                    <textarea id="aPlayers" placeholder="Enter your best forward players (one per line)&#10;Example:&#10;Sarah&#10;Mike"></textarea>
+                    <small id="forwardsHelp">Top forwards (exactly 1 per team)</small>
                     <div class="quick-fill">
                         <button onclick="fillExample('a')">Fill Example</button>
                         <button onclick="clearField('aPlayers')">Clear</button>
@@ -392,9 +464,9 @@
                 </div>
                 
                 <div class="grade-group grade-b">
-                    <h3>🛡️ 4 Best Backs</h3>
-                    <textarea id="bPlayers" placeholder="Enter your 4 best back players (one per line)&#10;Example:&#10;Emma&#10;David&#10;Lisa&#10;Chris"></textarea>
-                    <small>Top 4 backs (exactly 1 per team)</small>
+                    <h3 id="backsTitle">🛡️ 2 Best Backs</h3>
+                    <textarea id="bPlayers" placeholder="Enter your best back players (one per line)&#10;Example:&#10;Emma&#10;David"></textarea>
+                    <small id="backsHelp">Top backs (exactly 1 per team)</small>
                     <div class="quick-fill">
                         <button onclick="fillExample('b')">Fill Example</button>
                         <button onclick="clearField('bPlayers')">Clear</button>
@@ -403,7 +475,7 @@
                 
                 <div class="grade-group grade-c">
                     <h3>👥 All Other Players</h3>
-                    <textarea id="cPlayers" placeholder="Enter all remaining players (one per line)&#10;Example:&#10;Ashley&#10;Ben&#10;Casey&#10;Drew&#10;Eli&#10;Fiona"></textarea>
+                    <textarea id="cPlayers" placeholder="Enter all remaining players (one per line)&#10;Example:&#10;Ashley&#10;Ben&#10;Casey&#10;Drew"></textarea>
                     <small>All remaining players (distributed evenly across teams)</small>
                     <div class="quick-fill">
                         <button onclick="fillExample('c')">Fill Example</button>
@@ -412,8 +484,8 @@
                 </div>
             </div>
             
-            <div class="example-players">
-                <strong>💡 Quick Start:</strong> Enter exactly 4 forwards and 4 backs, then add all other players. Tap "Fill Example" to see how it works!
+            <div class="example-players" id="exampleText">
+                <strong>💡 Quick Start:</strong> Enter exactly 2 forwards and 2 backs, then add all other players. Tap "Fill Example" to see how it works!
             </div>
             
             <div class="btn-group">
@@ -433,7 +505,7 @@
             <div id="teamsContainer" class="teams-grid"></div>
             
             <div class="btn-group" id="teamButtons" style="display: none;">
-                <button class="btn btn-primary" onclick="generateDraw()">
+                <button class="btn btn-primary" onclick="generateDraw()" id="drawBtn">
                     📋 Generate Draw
                 </button>
                 <button class="btn btn-secondary" onclick="copyTeams()">
@@ -462,18 +534,88 @@
     <script>
         let teams = [];
         let lastGeneratedGames = [];
+        let currentTeamCount = 2;
         
-        // Example player data
+        // Example player data for different team counts
         const examplePlayers = {
-            a: ['Sarah (F)', 'Mike (F)', 'Alex (F)', 'Jordan (F)'],
-            b: ['Emma (B)', 'David (B)', 'Lisa (B)', 'Chris (B)'],
-            c: ['Ashley', 'Ben', 'Casey', 'Drew', 'Eli', 'Fiona', 'Grace', 'Henry', 'Ivy', 'Jack', 'Kelly', 'Liam']
+            2: {
+                a: ['Sarah (F)', 'Mike (F)'],
+                b: ['Emma (B)', 'David (B)'],
+                c: ['Ashley', 'Ben', 'Casey', 'Drew', 'Eli', 'Fiona']
+            },
+            4: {
+                a: ['Sarah (F)', 'Mike (F)', 'Alex (F)', 'Jordan (F)'],
+                b: ['Emma (B)', 'David (B)', 'Lisa (B)', 'Chris (B)'],
+                c: ['Ashley', 'Ben', 'Casey', 'Drew', 'Eli', 'Fiona', 'Grace', 'Henry', 'Ivy', 'Jack', 'Kelly', 'Liam']
+            }
         };
+        
+        // Initialize event listeners when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set up radio button event listeners
+            document.getElementById('option-2').addEventListener('click', () => selectTeamCount(2));
+            document.getElementById('option-4').addEventListener('click', () => selectTeamCount(4));
+            
+            // Set up textarea auto-resize
+            const textareas = document.querySelectorAll('textarea');
+            textareas.forEach(textarea => {
+                textarea.addEventListener('input', function() {
+                    autoResize(this);
+                });
+            });
+            
+            // Initialize UI for default team count
+            updateUIForTeamCount(currentTeamCount);
+        });
+        
+        function selectTeamCount(count) {
+            currentTeamCount = count;
+            
+            // Update radio button selection visually
+            document.querySelectorAll('.radio-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            document.getElementById(`option-${count}`).classList.add('selected');
+            
+            // Update actual radio button
+            document.getElementById(`teams${count}`).checked = true;
+            
+            // Update UI text based on team count
+            updateUIForTeamCount(count);
+            
+            // Clear existing data
+            clearAll(false); // Don't show confirmation
+        }
+        
+        function updateUIForTeamCount(count) {
+            const forwardsTitle = document.getElementById('forwardsTitle');
+            const backsTitle = document.getElementById('backsTitle');
+            const forwardsHelp = document.getElementById('forwardsHelp');
+            const backsHelp = document.getElementById('backsHelp');
+            const exampleText = document.getElementById('exampleText');
+            const drawBtn = document.getElementById('drawBtn');
+            
+            if (count === 2) {
+                forwardsTitle.textContent = '⚡ 2 Best Forwards';
+                backsTitle.textContent = '🛡️ 2 Best Backs';
+                forwardsHelp.textContent = 'Top 2 forwards (exactly 1 per team)';
+                backsHelp.textContent = 'Top 2 backs (exactly 1 per team)';
+                exampleText.innerHTML = '<strong>💡 Quick Start:</strong> Enter exactly 2 forwards and 2 backs, then add all other players. Perfect for simple team splitting!';
+                if (drawBtn) drawBtn.style.display = 'none';
+            } else {
+                forwardsTitle.textContent = '⚡ 4 Best Forwards';
+                backsTitle.textContent = '🛡️ 4 Best Backs';
+                forwardsHelp.textContent = 'Top 4 forwards (exactly 1 per team)';
+                backsHelp.textContent = 'Top 4 backs (exactly 1 per team)';
+                exampleText.innerHTML = '<strong>💡 Quick Start:</strong> Enter exactly 4 forwards and 4 backs, then add all other players. Tap "Fill Example" to see how it works!';
+                if (drawBtn) drawBtn.style.display = 'block';
+            }
+        }
         
         function fillExample(grade) {
             const fieldId = grade + 'Players';
             const field = document.getElementById(fieldId);
-            field.value = examplePlayers[grade].join('\n');
+            field.value = examplePlayers[currentTeamCount][grade].join('\n');
             autoResize(field);
         }
         
@@ -521,23 +663,24 @@
                 const players = collectPlayers();
                 
                 // Validate required players
-                if (players.forwards.length !== 4) {
-                    showMessage('teamMessage', '⚠️ You must enter exactly 4 forwards! Currently have: ' + players.forwards.length, 'error');
+                if (players.forwards.length !== currentTeamCount) {
+                    showMessage('teamMessage', `⚠️ You must enter exactly ${currentTeamCount} forwards! Currently have: ${players.forwards.length}`, 'error');
                     btn.innerHTML = originalText;
                     btn.disabled = false;
                     return;
                 }
                 
-                if (players.backs.length !== 4) {
-                    showMessage('teamMessage', '⚠️ You must enter exactly 4 backs! Currently have: ' + players.backs.length, 'error');
+                if (players.backs.length !== currentTeamCount) {
+                    showMessage('teamMessage', `⚠️ You must enter exactly ${currentTeamCount} backs! Currently have: ${players.backs.length}`, 'error');
                     btn.innerHTML = originalText;
                     btn.disabled = false;
                     return;
                 }
                 
                 const totalPlayers = players.forwards.length + players.backs.length + players.others.length;
-                if (totalPlayers < 8) {
-                    showMessage('teamMessage', '⚠️ Need at least 8 players total (4 forwards + 4 backs + others)! Try using "Fill Example" buttons.', 'error');
+                const minPlayers = currentTeamCount * 2; // At least forwards + backs
+                if (totalPlayers < minPlayers) {
+                    showMessage('teamMessage', `⚠️ Need at least ${minPlayers} players total (${currentTeamCount} forwards + ${currentTeamCount} backs + others)! Try using "Fill Example" buttons.`, 'error');
                     btn.innerHTML = originalText;
                     btn.disabled = false;
                     return;
@@ -549,34 +692,38 @@
                 const shuffledOthers = shuffleArray(players.others);
                 
                 // Initialize teams
-                teams = [
-                    { name: 'Team 1', players: [], forwards: 0, backs: 0, others: 0 },
-                    { name: 'Team 2', players: [], forwards: 0, backs: 0, others: 0 },
-                    { name: 'Team 3', players: [], forwards: 0, backs: 0, others: 0 },
-                    { name: 'Team 4', players: [], forwards: 0, backs: 0, others: 0 }
-                ];
+                teams = [];
+                for (let i = 0; i < currentTeamCount; i++) {
+                    teams.push({
+                        name: `Team ${i + 1}`,
+                        players: [],
+                        forwards: 0,
+                        backs: 0,
+                        others: 0
+                    });
+                }
                 
                 // Distribute forwards (exactly 1 per team)
-                for (let i = 0; i < 4; i++) {
+                for (let i = 0; i < currentTeamCount; i++) {
                     teams[i].players.push({ name: shuffledForwards[i], position: 'Forward' });
                     teams[i].forwards++;
                 }
                 
                 // Distribute backs (exactly 1 per team)
-                for (let i = 0; i < 4; i++) {
+                for (let i = 0; i < currentTeamCount; i++) {
                     teams[i].players.push({ name: shuffledBacks[i], position: 'Back' });
                     teams[i].backs++;
                 }
                 
                 // Distribute other players evenly
                 if (shuffledOthers.length > 0) {
-                    const targetOthersPerTeam = Math.floor(shuffledOthers.length / 4);
-                    const teamsNeedingExtra = shuffledOthers.length % 4;
+                    const targetOthersPerTeam = Math.floor(shuffledOthers.length / currentTeamCount);
+                    const teamsNeedingExtra = shuffledOthers.length % currentTeamCount;
                     
                     let playerIndex = 0;
                     
                     // First phase: fill to target size
-                    for (let team = 0; team < 4; team++) {
+                    for (let team = 0; team < currentTeamCount; team++) {
                         for (let j = 0; j < targetOthersPerTeam && playerIndex < shuffledOthers.length; j++) {
                             teams[team].players.push({ name: shuffledOthers[playerIndex], position: 'Player' });
                             teams[team].others++;
@@ -596,7 +743,20 @@
                 
                 displayTeams();
                 document.getElementById('teamButtons').style.display = 'flex';
-                showMessage('teamMessage', '🎉 Perfect! Teams generated with 1 forward and 1 back each. Tap "Generate Draw" for the game schedule!', 'success');
+                
+                // Hide draw button for 2 teams
+                const drawBtn = document.getElementById('drawBtn');
+                if (currentTeamCount === 2) {
+                    drawBtn.style.display = 'none';
+                } else {
+                    drawBtn.style.display = 'block';
+                }
+                
+                const successMessage = currentTeamCount === 2 
+                    ? '🎉 Perfect! 2 balanced teams generated with 1 forward and 1 back each!'
+                    : '🎉 Perfect! Teams generated with 1 forward and 1 back each. Tap "Generate Draw" for the game schedule!';
+                    
+                showMessage('teamMessage', successMessage, 'success');
                 
                 btn.innerHTML = originalText;
                 btn.disabled = false;
@@ -679,11 +839,98 @@
         
         function generateDraw() {
             if (teams.length !== 4) {
-                showMessage('drawMessage', '⚠️ Please generate teams first!', 'error');
+                showMessage('drawMessage', '⚠️ Please generate 4 teams first!', 'error');
                 return;
             }
             
-            const games = [];
+            // Generate draw with priority: 1) No repeat matchups, 2) Deep end preference
+            const validDraw = generateOptimalDraw();
+            
+            if (!validDraw.valid) {
+                showMessage('drawMessage', '⚠️ Could not generate a valid draw. This should not happen with 4 teams.', 'error');
+                return;
+            }
+            
+            lastGeneratedGames = validDraw.games;
+            displayDraw(validDraw.games, validDraw.locationCount);
+            document.getElementById('drawCopyButtons').style.display = 'flex';
+            
+            const specialMessage = validDraw.hasDeepEndStrategy ? 
+                ' One team plays deep end for all games to ensure no repeat matchups!' : '';
+            
+            showMessage('drawMessage', '🎉 Perfect! Tournament draw generated. No team plays another more than once!' + specialMessage, 'success');
+            
+            setTimeout(() => {
+                document.getElementById('drawContainer').scrollIntoView({ behavior: 'smooth' });
+            }, 300);
+        }
+        
+        function generateOptimalDraw() {
+            // For 4 teams, there are exactly 6 possible matchups: (0,1), (0,2), (0,3), (1,2), (1,3), (2,3)
+            // With 3 games, we need to select 6 matchups total (2 per game)
+            // This means we can have each pair play exactly once!
+            
+            const allMatchups = [
+                [0, 1], [0, 2], [0, 3], [1, 2], [1, 3], [2, 3]
+            ];
+            
+            // Strategy 1: Try to distribute locations evenly
+            const strategy1 = tryDrawStrategy([
+                { shallow: [0, 1], deep: [2, 3] }, // matchups: (0,1), (2,3)
+                { shallow: [0, 2], deep: [1, 3] }, // matchups: (0,2), (1,3)  
+                { shallow: [0, 3], deep: [1, 2] }  // matchups: (0,3), (1,2)
+            ]);
+            
+            if (strategy1.valid && strategy1.balanced) {
+                return strategy1;
+            }
+            
+            // Strategy 2: Favor one team in deep end for all games
+            const deepEndStrategies = [
+                // Team 0 always in deep
+                [
+                    { shallow: [1, 2], deep: [0, 3] }, // matchups: (1,2), (0,3)
+                    { shallow: [1, 3], deep: [0, 2] }, // matchups: (1,3), (0,2)
+                    { shallow: [2, 3], deep: [0, 1] }  // matchups: (2,3), (0,1)
+                ],
+                // Team 1 always in deep
+                [
+                    { shallow: [0, 2], deep: [1, 3] }, // matchups: (0,2), (1,3)
+                    { shallow: [0, 3], deep: [1, 2] }, // matchups: (0,3), (1,2)
+                    { shallow: [2, 3], deep: [1, 0] }  // matchups: (2,3), (1,0)
+                ],
+                // Team 2 always in deep
+                [
+                    { shallow: [0, 1], deep: [2, 3] }, // matchups: (0,1), (2,3)
+                    { shallow: [0, 3], deep: [2, 1] }, // matchups: (0,3), (2,1)
+                    { shallow: [1, 3], deep: [2, 0] }  // matchups: (1,3), (2,0)
+                ],
+                // Team 3 always in deep
+                [
+                    { shallow: [0, 1], deep: [3, 2] }, // matchups: (0,1), (3,2)
+                    { shallow: [0, 2], deep: [3, 1] }, // matchups: (0,2), (3,1)
+                    { shallow: [1, 2], deep: [3, 0] }  // matchups: (1,2), (3,0)
+                ]
+            ];
+            
+            // Try each deep end strategy
+            for (const strategy of deepEndStrategies) {
+                const result = tryDrawStrategy(strategy, true);
+                if (result.valid) {
+                    result.hasDeepEndStrategy = true;
+                    return result;
+                }
+            }
+            
+            // Fallback: return strategy1 even if not perfectly balanced
+            if (strategy1.valid) {
+                return strategy1;
+            }
+            
+            return { valid: false };
+        }
+        
+        function tryDrawStrategy(schedule, isDeepEndStrategy = false) {
             const locationCount = {
                 0: { Shallow: 0, Deep: 0 },
                 1: { Shallow: 0, Deep: 0 },
@@ -691,68 +938,62 @@
                 3: { Shallow: 0, Deep: 0 }
             };
             
-            // Generate 3 games with all teams playing
-            for (let gameNum = 1; gameNum <= 3; gameNum++) {
-                const teamOrder = shuffleArray([0, 1, 2, 3]);
-                
-                const shallowTeams = [];
-                const deepTeams = [];
-                const assigned = [false, false, false, false];
-                
-                // First assign constrained teams
-                for (let i = 0; i < 4; i++) {
-                    const teamIndex = teamOrder[i];
-                    if (locationCount[teamIndex].Shallow >= 2 && !assigned[i]) {
-                        deepTeams.push(teamIndex);
-                        assigned[i] = true;
-                    } else if (locationCount[teamIndex].Deep >= 2 && !assigned[i]) {
-                        shallowTeams.push(teamIndex);
-                        assigned[i] = true;
-                    }
+            const usedMatchups = new Set();
+            
+            // Check if all matchups are unique
+            for (const game of schedule) {
+                // Check shallow matchup
+                const shallowMatchup = game.shallow.slice().sort().join('-');
+                if (usedMatchups.has(shallowMatchup)) {
+                    return { valid: false }; // Repeat matchup found
                 }
+                usedMatchups.add(shallowMatchup);
                 
-                // Then assign remaining teams
-                for (let i = 0; i < 4; i++) {
-                    if (!assigned[i]) {
-                        const teamIndex = teamOrder[i];
-                        if (shallowTeams.length < 2 && (deepTeams.length >= 2 || Math.random() < 0.5)) {
-                            shallowTeams.push(teamIndex);
-                        } else {
-                            deepTeams.push(teamIndex);
-                        }
-                        assigned[i] = true;
-                    }
+                // Check deep matchup
+                const deepMatchup = game.deep.slice().sort().join('-');
+                if (usedMatchups.has(deepMatchup)) {
+                    return { valid: false }; // Repeat matchup found
                 }
+                usedMatchups.add(deepMatchup);
                 
-                // Randomly assign Black/White within locations
-                const shallowBlack = Math.random() < 0.5 ? shallowTeams[0] : shallowTeams[1];
-                const shallowWhite = shallowBlack === shallowTeams[0] ? shallowTeams[1] : shallowTeams[0];
-                const deepBlack = Math.random() < 0.5 ? deepTeams[0] : deepTeams[1];
-                const deepWhite = deepBlack === deepTeams[0] ? deepTeams[1] : deepTeams[0];
+                // Count locations
+                locationCount[game.shallow[0]].Shallow++;
+                locationCount[game.shallow[1]].Shallow++;
+                locationCount[game.deep[0]].Deep++;
+                locationCount[game.deep[1]].Deep++;
+            }
+            
+            // Build games with random color assignment
+            const games = schedule.map((game, index) => {
+                const shallowBlack = Math.random() < 0.5 ? game.shallow[0] : game.shallow[1];
+                const shallowWhite = shallowBlack === game.shallow[0] ? game.shallow[1] : game.shallow[0];
+                const deepBlack = Math.random() < 0.5 ? game.deep[0] : game.deep[1];
+                const deepWhite = deepBlack === game.deep[0] ? game.deep[1] : game.deep[0];
                 
-                games.push({
-                    game: gameNum,
+                return {
+                    game: index + 1,
                     shallowBlack: teams[shallowBlack].name,
                     shallowWhite: teams[shallowWhite].name,
                     deepBlack: teams[deepBlack].name,
                     deepWhite: teams[deepWhite].name
-                });
-                
-                // Update location counts
-                locationCount[shallowBlack].Shallow++;
-                locationCount[shallowWhite].Shallow++;
-                locationCount[deepBlack].Deep++;
-                locationCount[deepWhite].Deep++;
-            }
+                };
+            });
             
-            lastGeneratedGames = games;
-            displayDraw(games, locationCount);
-            document.getElementById('drawCopyButtons').style.display = 'flex';
-            showMessage('drawMessage', '🎉 Perfect! Your tournament draw is ready. Screenshot this for easy reference during games!', 'success');
+            // Check if locations are reasonably balanced (max 2 games per location per team)
+            let balanced = true;
+            Object.values(locationCount).forEach(count => {
+                if (count.Shallow > 2 || count.Deep > 2) {
+                    balanced = false;
+                }
+            });
             
-            setTimeout(() => {
-                document.getElementById('drawContainer').scrollIntoView({ behavior: 'smooth' });
-            }, 300);
+            return {
+                valid: true,
+                balanced: balanced,
+                games: games,
+                locationCount: locationCount,
+                hasDeepEndStrategy: isDeepEndStrategy
+            };
         }
         
         function displayDraw(games, locationCount) {
@@ -803,12 +1044,15 @@
                 const deep = locationCount[teamIndex].Deep;
                 const balanced = shallow <= 2 && deep <= 2;
                 
+                // Special indicator for deep end strategy
+                const deepEndNote = deep === 3 ? ' (Deep End Strategy)' : '';
+                
                 statsHtml += `
                     <div class="stat-card">
                         <h4>${teams[teamIndex].name}</h4>
                         <div class="stat-value">
                             Shallow: ${shallow} games, Deep: ${deep} games
-                            ${balanced ? ' ✅ Balanced' : ' ❌ Unbalanced'}
+                            ${balanced ? ' ✅ Balanced' : ' ⚠️ Imbalanced'}${deepEndNote}
                         </div>
                     </div>
                 `;
@@ -885,8 +1129,8 @@
                 });
             }
             
-            copyText += '\n✅ No teams play each other more than once\n';
-            copyText += '✅ No team plays in same location more than twice\n\n';
+            copyText += '\n✅ No teams play each other more than once - GUARANTEED!\n';
+            copyText += '✅ Deep end strategy used when needed for unique matchups\n\n';
             copyText += 'Generated by Team Generator App 🎮';
             
             copyToClipboard(copyText, 'drawMessage', 'Draw');
@@ -935,20 +1179,25 @@
             document.body.removeChild(textArea);
         }
         
-        function clearAll() {
-            if (confirm('🗑️ This will clear all player names and results. Are you sure?')) {
-                teams = [];
-                lastGeneratedGames = [];
-                document.getElementById('aPlayers').value = '';
-                document.getElementById('bPlayers').value = '';
-                document.getElementById('cPlayers').value = '';
-                document.getElementById('teamsContainer').innerHTML = '';
-                document.getElementById('drawContainer').innerHTML = '';
-                document.getElementById('teamStats').classList.add('hidden');
-                document.getElementById('drawStats').classList.add('hidden');
-                document.getElementById('teamButtons').style.display = 'none';
-                document.getElementById('drawCopyButtons').style.display = 'none';
-                clearMessages();
+        function clearAll(showConfirm = true) {
+            if (showConfirm && !confirm('🗑️ This will clear all player names and results. Are you sure?')) {
+                return;
+            }
+            
+            teams = [];
+            lastGeneratedGames = [];
+            document.getElementById('aPlayers').value = '';
+            document.getElementById('bPlayers').value = '';
+            document.getElementById('cPlayers').value = '';
+            document.getElementById('teamsContainer').innerHTML = '';
+            document.getElementById('drawContainer').innerHTML = '';
+            document.getElementById('teamStats').classList.add('hidden');
+            document.getElementById('drawStats').classList.add('hidden');
+            document.getElementById('teamButtons').style.display = 'none';
+            document.getElementById('drawCopyButtons').style.display = 'none';
+            clearMessages();
+            
+            if (showConfirm) {
                 showMessage('teamMessage', '✨ Ready for new players! Enter names above and tap "Generate Teams".', 'success');
             }
         }
@@ -976,16 +1225,6 @@
             const element = document.getElementById(elementId);
             element.innerHTML = `<div class="alert alert-${type === 'error' ? 'danger' : 'success'}">${message}</div>`;
         }
-        
-        // Auto-resize textareas
-        document.addEventListener('DOMContentLoaded', function() {
-            const textareas = document.querySelectorAll('textarea');
-            textareas.forEach(textarea => {
-                textarea.addEventListener('input', function() {
-                    autoResize(this);
-                });
-            });
-        });
     </script>
 </body>
 </html>
